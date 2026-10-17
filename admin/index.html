@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Campus-notes Admin</title>
+  <style>
+    :root { color-scheme: light; --ink: #172b3b; --muted: #66766f; --blue: #183b5b; --forest: #245b45; --gold: #d5a63b; --border: #dce5dd; --paper: #fff; --wash: #f5f7f3; --red: #a83e37; --green: #25805d; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--wash); color: var(--ink); font: 15px/1.5 system-ui, sans-serif; }
+    button, input, select, textarea { font: inherit; }
+    button { border: 0; border-radius: 8px; padding: 10px 14px; background: var(--blue); color: white; font-weight: 700; cursor: pointer; }
+    button.secondary { color: var(--forest); background: #eaf3ed; border: 1px solid #cbdccf; }
+    button.danger { color: var(--red); background: #fff2f2; border: 1px solid #f0d0d0; }
+    button:disabled { opacity: .55; cursor: default; }
+    input, select, textarea { width: 100%; padding: 10px 11px; border: 1px solid var(--border); border-radius: 8px; background: white; color: var(--ink); }
+    textarea { min-height: 78px; resize: vertical; }
+    label { display: grid; gap: 5px; color: var(--muted); font-size: 13px; font-weight: 600; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px max(20px, calc((100% - 1120px) / 2)); background: white; border-bottom: 1px solid var(--border); }
+    header h1 { margin: 0; color: var(--blue); font-size: 22px; }
+    header p { margin: 2px 0 0; color: var(--muted); }
+    main { width: min(1120px, calc(100% - 32px)); margin: 26px auto; }
+    .panel, .card { padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--paper); }
+    .login { width: min(420px, 100%); margin: 8vh auto; }
+    .login form, .form-grid { display: grid; gap: 13px; }
+    .login form[hidden] { display: none; }
+    .login h2, h2, h3 { margin: 0 0 12px; }
+    .muted { color: var(--muted); }
+    .error { display: none; padding: 10px 12px; border-radius: 8px; color: #812020; background: #fff0f0; }
+    .success { color: var(--green); }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+    nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+    nav button { color: var(--muted); background: white; border: 1px solid var(--border); }
+    nav button.active { color: white; background: var(--forest); border-color: var(--forest); }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .metric strong { display: block; font-size: 25px; }
+    .metric span { color: var(--muted); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: start; }
+    .form-grid .wide { grid-column: 1 / -1; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 620px; }
+    th, td { padding: 10px 8px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    td.actions { white-space: nowrap; }
+    td.actions button { margin: 0 4px 4px 0; padding: 7px 10px; }
+    .notice { margin: 0 0 15px; }
+    .file-name { overflow-wrap: anywhere; }
+    .approval-list { display: grid; gap: 12px; margin-top: 16px; }
+    .approval-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--paper); }
+    .approval-main, .approval-meta { display: grid; gap: 5px; min-width: 0; }
+    .approval-name { font-size: 16px; overflow-wrap: anywhere; }
+    .approval-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; grid-column: 1 / -1; }
+    .approval-meta dt { margin-bottom: 2px; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .approval-meta dd { margin: 0; overflow-wrap: anywhere; }
+    .approval-status { align-self: start; padding: 5px 10px; border-radius: 20px; background: #fbf4df; color: #604b12; font-size: 12px; font-weight: 700; text-transform: capitalize; }
+    .approval-status.approved { color: var(--forest); background: #eaf3ed; }
+    .approval-status.rejected { color: var(--red); background: #fff2f2; }
+    .approval-actions { display: flex; align-items: start; justify-content: flex-end; gap: 8px; }
+    .approval-actions button, .approval-card button { min-height: 42px; }
+    .rejection-reason { padding: 10px 12px; border-radius: 9px; background: #f8f3e5; }
+    .rejection-reason strong { display: block; margin-bottom: 3px; }
+    .banner-preview { width: min(100%, 560px); max-height: 240px; object-fit: cover; border: 1px solid var(--border); border-radius: 12px; background: var(--wash); }
+    .banner-image-tools { display: grid; gap: 10px; }
+    .checkbox-label { display: flex; align-items: center; gap: 8px; }
+    .checkbox-label input { width: auto; }
+    dialog { width: min(620px, calc(100% - 28px)); max-height: 90vh; border: 1px solid var(--border); border-radius: 14px; padding: 20px; color: var(--ink); }
+    dialog::backdrop { background: rgb(17 28 48 / 55%); }
+    @media (max-width: 560px) {
+      header { align-items: flex-start; padding: 14px 16px; }
+      .toolbar { align-items: flex-start; flex-direction: column; }
+      main { margin-top: 16px; }
+      .panel, .card { padding: 14px; }
+      .approval-card { grid-template-columns: minmax(0, 1fr); }
+      .approval-meta { grid-template-columns: minmax(0, 1fr); }
+      .approval-actions { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div><h1>Campus-notes Admin</h1><p>Administration portal</p></div>
+    <button id="logout" class="secondary" hidden>Sign out</button>
+  </header>
+  <main>
+    <section id="login" class="panel login">
+      <h2>Administrator sign in</h2>
+      <p class="muted">This portal is for department and system administrators.</p>
+      <p id="hosting-warning" class="error" role="alert">
+        This dashboard was opened from a file and cannot connect to the API.
+        Start the backend and open <a href="http://localhost:8000/admin/">http://localhost:8000/admin/</a> instead.
+      </p>
+      <p id="login-error" class="error" role="alert"></p>
+      <form id="login-form">
+        <label>Email<input name="email" type="email" autocomplete="username" required></label>
+        <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+        <button type="submit">Sign in</button>
+      </form>
+      <button id="forgot-password" class="secondary" type="button" style="width:100%;margin-top:10px">Forgot password?</button>
+      <form id="reset-request-form" hidden>
+        <label>Email<input id="reset-email" type="email" autocomplete="email" required></label>
+        <button type="submit">Send reset code</button>
+        <button id="cancel-reset-request" class="secondary" type="button">Back to sign in</button>
+      </form>
+      <form id="reset-confirm-form" hidden>
+        <label>Email<input id="reset-confirm-email" type="email" readonly required></label>
+        <label>6-digit email code<input id="reset-otp" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required></label>
+        <label>New password<input id="reset-password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></label>
+        <button type="submit">Update password</button>
+        <button id="resend-reset-code" class="secondary" type="button">Resend code</button>
+        <p id="reset-countdown" class="muted" aria-live="polite"></p>
+        <button id="cancel-reset-confirm" class="secondary" type="button">Back to sign in</button>
+      </form>
+    </section>
+
+    <section id="dashboard" hidden>
+      <div class="toolbar">
+        <div><strong id="welcome"></strong><div id="role-label" class="muted"></div></div>
+        <button id="reload" class="secondary">Refresh data</button>
+      </div>
+      <p id="notice" class="notice error" role="status"></p>
+      <div id="metrics" class="metrics"></div>
+      <nav id="tabs" aria-label="Admin sections">
+        <button data-section="papers" class="active">Question papers</button>
+        <button data-section="home-banner" class="super-only">Home banner</button>
+        <button data-section="departments" class="super-only">Departments</button>
+        <button data-section="approvals">Institutes</button>
+        <button data-section="activity">Recent activity</button>
+      </nav>
+
+      <section id="section-papers" class="section active">
+        <div class="grid">
+          <form id="paper-form" class="panel form-grid">
+            <h2 class="wide">Upload question paper</h2>
+            <label class="wide">PDF file<input name="file" type="file" accept="application/pdf,.pdf" required></label>
+            <label>Subject<input name="subject" maxlength="200" required></label>
+            <label>Subject code<input name="subject_code" maxlength="80"></label>
+            <label>Department<select name="department_id" required></select></label>
+            <label>Semester<input name="semester" type="number" min="1" max="12" value="1" required></label>
+            <label>Exam type<select name="exam_type" required>
+              <option>Weekly Test 1</option><option>Weekly Test 2</option><option>CIA 1</option><option>CIA 2</option><option>End Semester</option>
+            </select></label>
+            <label>Year<input name="year" value="2026" minlength="4" maxlength="8" required></label>
+            <label class="wide">Description<textarea name="description" maxlength="2000"></textarea></label>
+            <button class="wide" type="submit">Upload paper</button>
+          </form>
+          <div class="panel">
+            <h2>Paper library</h2>
+            <div class="table-wrap"><table><thead><tr><th>Paper</th><th>Department</th><th>Exam</th><th>Usage</th><th>Actions</th></tr></thead><tbody id="papers"></tbody></table></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="section-home-banner" class="section super-only">
+        <div class="panel">
+          <h2>Home page banner</h2>
+          <p class="muted">Edit the text shown in the Home screen hero. The button always opens Discover.</p>
+          <form id="home-banner-form" class="form-grid">
+            <label class="wide">Headline
+              <textarea id="home-banner-title" maxlength="120" rows="2" required placeholder="Every paper.&#10;One place."></textarea>
+            </label>
+            <label class="wide">Description
+              <textarea id="home-banner-description" maxlength="350" rows="3" required placeholder="Tell students what they can do in Campus-notes."></textarea>
+            </label>
+            <label>Button label<input id="home-banner-button-label" maxlength="40" required placeholder="Explore papers"></label>
+            <div class="wide banner-image-tools">
+              <label for="home-banner-image-file">Banner image (optional)</label>
+              <input id="home-banner-image-file" type="file" accept="image/png,image/jpeg,image/gif,image/webp,.png,.jpg,.jpeg,.gif,.webp">
+              <span class="muted">PNG, JPG/JPEG, GIF (including animated), or WebP. Maximum 5 MB and 20 megapixels.</span>
+              <img id="home-banner-image-preview" class="banner-preview" alt="Current home banner image" hidden>
+              <label id="home-banner-remove-image-wrap" class="checkbox-label" hidden>
+                <input id="home-banner-remove-image" type="checkbox"> Remove the current image
+              </label>
+            </div>
+            <div class="wide actions">
+              <button id="save-home-banner" type="submit">Save banner</button>
+              <button id="delete-home-banner" class="danger" type="button">Delete banner</button>
+            </div>
+            <p id="home-banner-state" class="wide muted" role="status"></p>
+          </form>
+        </div>
+      </section>
+
+      <section id="section-departments" class="section">
+        <div class="grid">
+          <form id="department-form" class="panel form-grid">
+            <h2 class="wide">Add department</h2>
+            <label>Department name<input name="name" maxlength="160" required></label>
+            <label>Code<input name="code" maxlength="32" required></label>
+            <button class="wide" type="submit">Add department</button>
+          </form>
+          <div class="panel"><h2>Departments</h2><div class="table-wrap"><table><thead><tr><th>Name</th><th>Code</th><th>Actions</th></tr></thead><tbody id="departments"></tbody></table></div></div>
+        </div>
+      </section>
+
+      <section id="section-approvals" class="section">
+        <div class="panel"><h2>Institute accounts (<span id="institute-count">0</span>)</h2>
+          <p class="muted">Review institute account status. Approve pending accounts to allow paper uploads and edits from the mobile app.</p>
+          <p class="muted">Check the applicant’s contact details and affiliation document before deciding. Rejections require a reason that will be shared with the applicant.</p>
+          <div id="institute-approvals" class="approval-list" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section id="section-activity" class="section">
+        <div class="panel"><h2>Recent activity</h2><div class="table-wrap"><table><thead><tr><th>When</th><th>Activity</th><th>User ID</th></tr></thead><tbody id="activity"></tbody></table></div></div>
+      </section>
+    </section>
+  </main>
+  <dialog id="paper-dialog">
+    <form id="paper-edit-form" class="form-grid">
+      <h2 class="wide">Edit question paper</h2>
+      <label class="wide">Subject<input name="subject" maxlength="200" required></label>
+      <label>Subject code<input name="subject_code" maxlength="80"></label>
+      <label>Department<select name="department_id" required></select></label>
+      <label>Semester<input name="semester" type="number" min="1" max="12" required></label>
+      <label>Exam type<select name="exam_type" required>
+        <option>Weekly Test 1</option><option>Weekly Test 2</option><option>CIA 1</option><option>CIA 2</option><option>End Semester</option>
+      </select></label>
+      <label>Year<input name="year" minlength="4" maxlength="8" required></label>
+      <label class="wide">Description<textarea name="description" maxlength="2000"></textarea></label>
+      <label class="wide">Replace PDF (optional)<input name="file" type="file" accept="application/pdf,.pdf"></label>
+      <div class="wide actions"><button type="submit">Save changes</button><button id="cancel-edit" class="secondary" type="button">Cancel</button></div>
+    </form>
+  </dialog>
+  <dialog id="institute-rejection-dialog" aria-labelledby="institute-rejection-title">
+    <form id="institute-rejection-form" class="form-grid">
+      <h2 id="institute-rejection-title" class="wide">Reject institute account</h2>
+      <p class="wide muted">Enter a clear reason. The applicant will receive this message by email.</p>
+      <label class="wide">Reason for rejection
+        <textarea id="institute-rejection-reason" maxlength="2000" required placeholder="Explain what needs to be corrected or why the request cannot be approved."></textarea>
+      </label>
+      <div class="wide actions">
+        <button id="confirm-institute-rejection" class="danger" type="submit">Reject account</button>
+        <button id="cancel-institute-rejection" class="secondary" type="button">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+  <script>
+    const tokenKey = 'campus-notes-admin-token';
+    const state = { token: sessionStorage.getItem(tokenKey), user: null, departments: [], papers: [], editingPaper: null, rejectingInstituteId: null, homeBanner: null };
+    const byId = (id) => document.getElementById(id);
+    let resendTimer = null;
+    let homeBannerPreviewObjectUrl = null;
+    if (location.protocol === 'file:') {
+      byId('hosting-warning').style.display = 'block';
+      byId('login-form').hidden = true;
+      byId('forgot-password').hidden = true;
+    }
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    })[char]);
+    const toLocal = (value) => value ? new Date(value).toLocaleString() : '—';
+
+    function message(text, isError = true) {
+      const node = byId('notice');
+      node.textContent = text;
+      node.classList.toggle('error', isError);
+      node.classList.toggle('success', !isError);
+      node.style.display = text ? 'block' : 'none';
+    }
+
+    async function api(path, options = {}) {
+      const headers = new Headers(options.headers || {});
+      if (state.token) headers.set('Authorization', `Bearer ${state.token}`);
+      if (options.body && !(options.body instanceof FormData)) headers.set('Content-Type', 'application/json');
+      const response = await fetch(path, { ...options, headers });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        if (response.status === 401) signOut();
+        const detail = body?.detail;
+        throw new Error(Array.isArray(detail) ? detail.map((item) => item.msg).join(', ') : detail || 'Request failed');
+      }
+      return body;
+    }
+
+    function signOut() {
+      state.token = null;
+      state.user = null;
+      sessionStorage.removeItem(tokenKey);
+      byId('dashboard').hidden = true;
+      byId('login').hidden = false;
+      byId('logout').hidden = true;
+    }
+
+    function showLoginError(text, isSuccess = false) {
+      const error = byId('login-error');
+      error.textContent = text;
+      error.classList.toggle('error', !isSuccess);
+      error.classList.toggle('success', isSuccess);
+      error.style.display = text ? 'block' : 'none';
+    }
+
+    function startResetCountdown(seconds) {
+      if (resendTimer) clearInterval(resendTimer);
+      const resendAt = Date.now() + seconds * 1000;
+      const update = () => {
+        const remaining = Math.max(0, Math.ceil((resendAt - Date.now()) / 1000));
+        byId('resend-reset-code').disabled = remaining > 0;
+        byId('resend-reset-code').textContent = remaining ? `Resend code (${remaining}s)` : 'Resend code';
+        byId('reset-countdown').textContent = remaining ? 'You can request another code when the timer ends.' : '';
+        if (!remaining && resendTimer) {
+          clearInterval(resendTimer);
+          resendTimer = null;
+        }
+      };
+      update();
+      resendTimer = setInterval(update, 250);
+    }
+
+    async function sendResetCode() {
+      showLoginError('');
+      const result = await api('/api/auth/password-reset/request', {
+        method: 'POST',
+        body: JSON.stringify({ email: byId('reset-email').value.trim() }),
+      });
+      byId('reset-confirm-email').value = byId('reset-email').value.trim();
+      byId('reset-request-form').hidden = true;
+      byId('reset-confirm-form').hidden = false;
+      startResetCountdown(result.resend_after_seconds || 60);
+    }
+
+    byId('forgot-password').addEventListener('click', () => {
+      byId('reset-email').value = byId('login-form').elements.email.value.trim();
+      byId('login-form').hidden = true;
+      byId('forgot-password').hidden = true;
+      byId('reset-request-form').hidden = false;
+      showLoginError('');
+    });
+    byId('cancel-reset-request').addEventListener('click', () => {
+      byId('reset-request-form').hidden = true;
+      byId('login-form').hidden = false;
+      byId('forgot-password').hidden = false;
+      showLoginError('');
+    });
+    byId('cancel-reset-confirm').addEventListener('click', () => {
+      if (resendTimer) clearInterval(resendTimer);
+      resendTimer = null;
+      byId('login-form').elements.email.value = byId('reset-confirm-email').value;
+      byId('reset-confirm-form').hidden = true;
+      byId('login-form').hidden = false;
+      byId('forgot-password').hidden = false;
+      showLoginError('');
+    });
+    byId('reset-request-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        await sendResetCode();
+      } catch (err) {
+        showLoginError(err.message);
+      }
+    });
+    byId('resend-reset-code').addEventListener('click', async () => {
+      byId('reset-email').value = byId('reset-confirm-email').value;
+      try {
+        await sendResetCode();
+      } catch (err) {
+        showLoginError(err.message);
+      }
+    });
+    byId('reset-confirm-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      showLoginError('');
+      try {
+        await api('/api/auth/password-reset/confirm', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: byId('reset-confirm-email').value.trim(),
+            otp: byId('reset-otp').value.trim(),
+            new_password: byId('reset-password').value,
+          }),
+        });
+        if (resendTimer) clearInterval(resendTimer);
+        resendTimer = null;
+        byId('login-form').elements.email.value = byId('reset-confirm-email').value;
+        byId('login-form').hidden = false;
+        byId('forgot-password').hidden = false;
+        byId('reset-confirm-form').hidden = true;
+        byId('reset-otp').value = '';
+        byId('reset-password').value = '';
+        showLoginError('Password updated. Sign in with your new password.', true);
+      } catch (err) {
+        showLoginError(err.message);
+      }
+    });
+
+    function setDepartments(select, selected = '') {
+      const eligible = state.user?.role === 'dept_admin'
+        ? state.departments.filter((item) => item.id === state.user.department_id)
+        : state.departments;
+      select.innerHTML = '<option value="">Select department</option>' + eligible.map((item) =>
+        `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)} (${escapeHtml(item.code)})</option>`).join('');
+      if (selected) select.value = selected;
+      if (state.user?.role === 'dept_admin') {
+        select.value = state.user.department_id || '';
+        select.disabled = true;
+      }
+    }
+
+    function safePaperUrl(value) {
+      if (!value) return '';
+      const url = new URL(value, location.origin);
+      return url.origin === location.origin && url.pathname.startsWith('/uploads/') ? url.href : '';
+    }
+
+    function renderMetrics(stats) {
+      const values = [
+        ['Papers', stats.totalPapers], ['Views', stats.totalViews],
+        ['Downloads', stats.totalDownloads], ['Departments', stats.totalDepartments],
+      ];
+      byId('metrics').innerHTML = values.map(([label, value]) =>
+        `<div class="card metric"><strong>${escapeHtml(value)}</strong><span>${label}</span></div>`).join('');
+    }
+
+    function renderPapers() {
+      byId('papers').innerHTML = state.papers.map((paper) => {
+        const fileUrl = safePaperUrl(paper.file_url);
+        return `<tr>
+          <td><strong>${escapeHtml(paper.subject)}</strong><div class="muted">${escapeHtml(paper.subject_code || '')} · Sem ${escapeHtml(paper.semester)} · ${escapeHtml(paper.year)}</div>
+            ${fileUrl ? `<a href="${escapeHtml(fileUrl)}" target="_blank" rel="noopener">Open PDF</a>` : '<span class="muted">No PDF</span>'}</td>
+          <td>${escapeHtml(paper.department_name || '')}</td>
+          <td>${escapeHtml(paper.exam_type)}</td>
+          <td>${escapeHtml(paper.views)} views<br>${escapeHtml(paper.downloads)} downloads</td>
+          <td class="actions"><button class="secondary" data-edit-paper="${escapeHtml(paper.id)}">Edit</button><button class="danger" data-delete-paper="${escapeHtml(paper.id)}">Delete</button></td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="5" class="muted">No papers found.</td></tr>';
+    }
+
+    function renderDepartments() {
+      byId('departments').innerHTML = state.departments.map((department) =>
+        `<tr><td>${escapeHtml(department.name)}</td><td>${escapeHtml(department.code)}</td><td class="actions">
+          <button class="secondary" data-edit-department="${escapeHtml(department.id)}">Edit</button>
+          <button class="danger" data-delete-department="${escapeHtml(department.id)}">Delete</button></td></tr>`).join('')
+        || '<tr><td colspan="3" class="muted">No departments found.</td></tr>';
+    }
+
+    function renderInstituteApprovals(users, canManage) {
+      byId('institute-count').textContent = users.length;
+      byId('institute-approvals').innerHTML = users.map((user) => {
+        const status = user.approval_status || 'approved';
+        const statusClass = ['pending', 'approved', 'rejected'].includes(status) ? status : 'unknown';
+        return `<article class="approval-card">
+          <div class="approval-main">
+            <strong class="approval-name">${escapeHtml(user.name)}</strong>
+            <span>${escapeHtml(user.institute_name || 'Institute not provided')}</span>
+            <span class="muted">${escapeHtml(user.email)}</span>
+          </div>
+          <span class="approval-status ${statusClass}">${escapeHtml(status)}</span>
+          <dl class="approval-meta">
+            <div><dt>Phone and designation</dt><dd>${escapeHtml(user.phone || '—')} · ${escapeHtml(user.designation || '—')}</dd></div>
+            <div><dt>Application received</dt><dd>${escapeHtml(toLocal(user.created_at))}</dd></div>
+            <div><dt>Affiliation document</dt><dd>${user.has_institute_document
+              ? `<button class="secondary" data-institute-document="${escapeHtml(user.id)}">Download ${escapeHtml(user.institute_document_name || 'document')}</button>`
+              : '<span class="muted">Not provided</span>'}</dd></div>
+            <div><dt>Rejection reason</dt><dd>${user.rejection_reason
+              ? `<div class="rejection-reason"><strong>Shared with applicant</strong>${escapeHtml(user.rejection_reason)}</div>`
+              : '<span class="muted">—</span>'}</dd></div>
+          </dl>
+          <div class="approval-actions">${status === 'pending' && canManage
+            ? `<button data-approve-institute="${escapeHtml(user.id)}">Approve</button>
+              <button class="danger" data-reject-institute="${escapeHtml(user.id)}">Reject</button>`
+            : '<span class="muted">View only</span>'}</div>
+        </article>`;
+      }).join('')
+        || '<div class="card muted">No institute accounts found.</div>';
+    }
+
+    function renderActivity(items) {
+      byId('activity').innerHTML = items.map((item) =>
+        `<tr><td>${escapeHtml(toLocal(item.created_at))}</td><td>${escapeHtml(item.message)}</td><td>${escapeHtml(item.user_id)}</td></tr>`).join('')
+        || '<tr><td colspan="3" class="muted">No recent activity.</td></tr>';
+    }
+
+    function renderHomeBanner(banner) {
+      state.homeBanner = banner;
+      byId('home-banner-title').value = banner?.title || '';
+      byId('home-banner-description').value = banner?.description || '';
+      byId('home-banner-button-label').value = banner?.button_label || '';
+      byId('delete-home-banner').hidden = !banner;
+      byId('home-banner-image-file').value = '';
+      byId('home-banner-remove-image').checked = false;
+      byId('home-banner-remove-image-wrap').hidden = !banner?.image_url;
+      const imageUrl = typeof banner?.image_url === 'string'
+        && (banner.image_url.startsWith('/uploads/home-banner/')
+          || banner.image_url.startsWith('/api/home-banner/image'))
+        ? banner.image_url
+        : '';
+      setHomeBannerPreview(imageUrl);
+      byId('save-home-banner').textContent = banner ? 'Save banner' : 'Publish banner';
+      byId('home-banner-state').textContent = banner
+        ? `${imageUrl ? 'Banner and image' : 'Text banner'} currently visible on the Home screen.`
+        : 'No banner is currently visible. Add text above and publish a new banner.';
+    }
+
+    function setHomeBannerPreview(url) {
+      if (homeBannerPreviewObjectUrl) {
+        URL.revokeObjectURL(homeBannerPreviewObjectUrl);
+      }
+      homeBannerPreviewObjectUrl = url.startsWith('blob:') ? url : null;
+      const preview = byId('home-banner-image-preview');
+      preview.src = url;
+      preview.hidden = !url;
+    }
+
+    async function loadDashboard() {
+      message('');
+      const [stats, departments, papers, activity, homeBanner] = await Promise.all([
+        api('/api/stats'),
+        api('/api/departments'),
+        api('/api/papers'),
+        api('/api/activity?limit=50'),
+        api('/api/home-banner'),
+      ]);
+      state.departments = departments;
+      state.papers = papers;
+      renderMetrics(stats);
+      renderPapers();
+      renderDepartments();
+      renderActivity(activity);
+      renderHomeBanner(homeBanner);
+      setDepartments(byId('paper-form').elements.department_id);
+      const institutes = await api('/api/users?role=institute');
+      renderInstituteApprovals(institutes, state.user.role === 'super_admin');
+    }
+
+    async function showDashboard(user) {
+      if (!['dept_admin', 'super_admin'].includes(user.role)) {
+        signOut();
+        throw new Error('This account is not an administrator.');
+      }
+      state.user = user;
+      byId('welcome').textContent = `Signed in as ${user.name}`;
+      byId('role-label').textContent = user.role === 'super_admin' ? 'System administrator' : 'Department administrator';
+      document.querySelectorAll('.super-only').forEach((node) => { node.hidden = user.role !== 'super_admin'; });
+      byId('login').hidden = true;
+      byId('dashboard').hidden = false;
+      byId('logout').hidden = false;
+      await loadDashboard();
+    }
+
+    byId('login-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      showLoginError('');
+      const form = new FormData(event.currentTarget);
+      try {
+        const result = await api('/api/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email: form.get('email'), password: form.get('password') }),
+        });
+        if (!['dept_admin', 'super_admin'].includes(result.user.role)) {
+          throw new Error('Use the Campus-notes mobile app to sign in as a reader.');
+        }
+        state.token = result.session.access_token;
+        sessionStorage.setItem(tokenKey, state.token);
+        await showDashboard(result.user);
+      } catch (err) {
+        showLoginError(err.message);
+      }
+    });
+
+    byId('logout').addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to sign out?')) return;
+      try { await api('/api/auth/logout', { method: 'POST' }); } catch (err) { message(err.message); }
+      signOut();
+    });
+    byId('reload').addEventListener('click', () => loadDashboard().catch((err) => message(err.message)));
+    byId('tabs').addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-section]');
+      if (!button || button.hidden) return;
+      document.querySelectorAll('#tabs button').forEach((item) => item.classList.toggle('active', item === button));
+      document.querySelectorAll('.section').forEach((section) => section.classList.toggle('active', section.id === `section-${button.dataset.section}`));
+    });
+
+    byId('paper-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const values = new FormData(form);
+      try {
+        const uploaded = await api('/api/uploads', { method: 'POST', body: new FormData(form) });
+        await api('/api/papers', {
+          method: 'POST',
+          body: JSON.stringify({
+            subject: values.get('subject').trim(), subject_code: values.get('subject_code').trim() || null,
+            department_id: values.get('department_id'), semester: Number(values.get('semester')),
+            exam_type: values.get('exam_type'), year: values.get('year').trim(),
+            description: values.get('description').trim() || null, file_url: uploaded.url,
+          }),
+        });
+        form.reset();
+        form.elements.semester.value = '1';
+        form.elements.year.value = String(new Date().getFullYear());
+        await loadDashboard();
+        message('Paper uploaded successfully.', false);
+      } catch (err) { message(err.message); }
+    });
+
+    byId('home-banner-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const saveButton = byId('save-home-banner');
+      const image = byId('home-banner-image-file').files[0];
+      const formData = new FormData();
+      formData.append('title', byId('home-banner-title').value.trim());
+      formData.append('description', byId('home-banner-description').value.trim());
+      formData.append('button_label', byId('home-banner-button-label').value.trim());
+      formData.append('remove_image', String(byId('home-banner-remove-image').checked));
+      if (image) formData.append('image', image);
+      saveButton.disabled = true;
+      byId('home-banner-state').textContent = image ? 'Uploading image and saving banner…' : 'Saving banner…';
+      try {
+        const banner = await api('/api/home-banner', {
+          method: 'PUT',
+          body: formData,
+        });
+        renderHomeBanner(banner);
+        message('Home banner saved and published.', false);
+      } catch (err) {
+        byId('home-banner-state').textContent = err.message;
+        message(`Could not save home banner: ${err.message}`);
+      } finally {
+        saveButton.disabled = false;
+      }
+    });
+
+    byId('home-banner-image-file').addEventListener('change', (event) => {
+      const image = event.currentTarget.files[0];
+      if (!image) return;
+      const extension = image.name.split('.').pop().toLowerCase();
+      if (!['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(extension)) {
+        event.currentTarget.value = '';
+        setHomeBannerPreview(state.homeBanner?.image_url || '');
+        message('Choose a PNG, JPG/JPEG, GIF, or WebP banner image.');
+        return;
+      }
+      if (image.size > 5 * 1024 * 1024) {
+        event.currentTarget.value = '';
+        setHomeBannerPreview(state.homeBanner?.image_url || '');
+        message('Banner images must be 5 MB or smaller.');
+        return;
+      }
+      byId('home-banner-remove-image').checked = false;
+      setHomeBannerPreview(URL.createObjectURL(image));
+      byId('home-banner-state').textContent = 'Image selected. Save the banner to publish it.';
+    });
+
+    byId('home-banner-remove-image').addEventListener('change', (event) => {
+      if (event.currentTarget.checked) {
+        byId('home-banner-image-file').value = '';
+        setHomeBannerPreview('');
+      } else {
+        setHomeBannerPreview(state.homeBanner?.image_url || '');
+      }
+    });
+
+    byId('delete-home-banner').addEventListener('click', async () => {
+      if (!state.homeBanner || !confirm('Delete the Home page banner? It will no longer be shown to students.')) return;
+      const deleteButton = byId('delete-home-banner');
+      deleteButton.disabled = true;
+      try {
+        await api('/api/home-banner', { method: 'DELETE' });
+        renderHomeBanner(null);
+        message('Home banner deleted.', false);
+      } catch (err) {
+        message(`Could not delete home banner: ${err.message}`);
+      } finally {
+        deleteButton.disabled = false;
+      }
+    });
+
+    byId('papers').addEventListener('click', async (event) => {
+      const edit = event.target.closest('[data-edit-paper]');
+      const remove = event.target.closest('[data-delete-paper]');
+      try {
+        if (edit) {
+          const paper = state.papers.find((item) => item.id === edit.dataset.editPaper);
+          if (!paper) throw new Error('Question paper was not found.');
+          const form = byId('paper-edit-form');
+          state.editingPaper = paper;
+          form.elements.subject.value = paper.subject;
+          form.elements.subject_code.value = paper.subject_code || '';
+          form.elements.semester.value = paper.semester;
+          form.elements.exam_type.value = paper.exam_type;
+          form.elements.year.value = paper.year;
+          form.elements.description.value = paper.description || '';
+          form.elements.file.value = '';
+          setDepartments(form.elements.department_id, paper.department_id);
+          byId('paper-dialog').showModal();
+        } else if (remove && confirm('Delete this question paper?')) {
+          await api(`/api/papers/${encodeURIComponent(remove.dataset.deletePaper)}`, { method: 'DELETE' });
+          await loadDashboard();
+          message('Paper deleted.', false);
+        }
+      } catch (err) { message(err.message); }
+    });
+
+    byId('cancel-edit').addEventListener('click', () => byId('paper-dialog').close());
+    byId('paper-edit-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const values = new FormData(form);
+      try {
+        const file = values.get('file');
+        let fileUrl = state.editingPaper.file_url;
+        if (file?.size) {
+          const upload = new FormData();
+          upload.append('file', file);
+          fileUrl = (await api('/api/uploads', { method: 'POST', body: upload })).url;
+        }
+        await api(`/api/papers/${encodeURIComponent(state.editingPaper.id)}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            subject: values.get('subject').trim(), subject_code: values.get('subject_code').trim() || null,
+            department_id: values.get('department_id'), semester: Number(values.get('semester')),
+            exam_type: values.get('exam_type'), year: values.get('year').trim(),
+            description: values.get('description').trim() || null, file_url: fileUrl,
+          }),
+        });
+        byId('paper-dialog').close();
+        state.editingPaper = null;
+        await loadDashboard();
+        message('Paper updated.', false);
+      } catch (err) { message(err.message); }
+    });
+
+    byId('department-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const values = new FormData(event.currentTarget);
+      try {
+        await api('/api/departments', { method: 'POST', body: JSON.stringify({ name: values.get('name').trim(), code: values.get('code').trim() }) });
+        event.currentTarget.reset();
+        await loadDashboard();
+        message('Department added.', false);
+      } catch (err) { message(err.message); }
+    });
+
+    byId('departments').addEventListener('click', async (event) => {
+      const edit = event.target.closest('[data-edit-department]');
+      const remove = event.target.closest('[data-delete-department]');
+      try {
+        if (edit) {
+          const department = state.departments.find((item) => item.id === edit.dataset.editDepartment);
+          const name = prompt('Department name', department.name);
+          if (name === null) return;
+          const code = prompt('Department code', department.code);
+          if (code === null) return;
+          await api(`/api/departments/${encodeURIComponent(department.id)}`, { method: 'PUT', body: JSON.stringify({ name: name.trim(), code: code.trim() }) });
+          await loadDashboard();
+          message('Department updated.', false);
+        } else if (remove && confirm('Delete this department and its papers?')) {
+          await api(`/api/departments/${encodeURIComponent(remove.dataset.deleteDepartment)}`, { method: 'DELETE' });
+          await loadDashboard();
+          message('Department deleted.', false);
+        }
+      } catch (err) { message(err.message); }
+    });
+
+    byId('institute-approvals').addEventListener('click', async (event) => {
+      const documentButton = event.target.closest('[data-institute-document]');
+      const approve = event.target.closest('[data-approve-institute]');
+      const reject = event.target.closest('[data-reject-institute]');
+      if (documentButton) {
+        try {
+          const userId = encodeURIComponent(documentButton.dataset.instituteDocument);
+          const response = await fetch(`/api/users/${userId}/institute-document`, {
+            headers: { Authorization: `Bearer ${state.token}` },
+          });
+          if (!response.ok) {
+            const body = await response.json().catch(() => null);
+            throw new Error(body?.detail || `Could not download document (HTTP ${response.status})`);
+          }
+          const url = URL.createObjectURL(await response.blob());
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = '';
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch (err) { message(err.message); }
+        return;
+      }
+      const userId = approve?.dataset.approveInstitute || reject?.dataset.rejectInstitute;
+      if (!userId) return;
+      if (reject) {
+        state.rejectingInstituteId = userId;
+        byId('institute-rejection-reason').value = '';
+        byId('institute-rejection-dialog').showModal();
+        byId('institute-rejection-reason').focus();
+        return;
+      }
+      await updateInstituteApproval(userId, 'approved');
+    });
+
+    async function updateInstituteApproval(userId, action, rejectionReason) {
+      try {
+        const result = await api(`/api/users/${encodeURIComponent(userId)}/approval`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            approval_status: action,
+            ...(action === 'rejected' ? { rejection_reason: rejectionReason } : {}),
+          }),
+        });
+        await loadDashboard();
+        if (action === 'approved' && result.approval_email_sent === false) {
+          message('Institute account approved, but the approval email could not be sent. Check SMTP configuration and server logs.');
+        } else if (action === 'rejected' && result.rejection_email_sent === false) {
+          message('Institute account rejected and reason recorded, but the email could not be sent. Check SMTP configuration and server logs.');
+        } else {
+          message(
+            action === 'approved'
+              ? result.approval_email_sent
+                ? 'Institute account approved and approval email sent.'
+                : 'Institute account approved.'
+              : result.rejection_email_sent
+                ? 'Institute account rejected and the reason was emailed to the applicant.'
+                : 'Institute account rejected and the reason was recorded.',
+            false,
+          );
+        }
+        return true;
+      } catch (err) {
+        message(err.message);
+        return false;
+      }
+    }
+
+    byId('institute-rejection-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const reasonField = byId('institute-rejection-reason');
+      const rejectionReason = reasonField.value.trim();
+      if (!rejectionReason) {
+        reasonField.setCustomValidity('Enter a reason before rejecting this account.');
+        reasonField.reportValidity();
+        return;
+      }
+      reasonField.setCustomValidity('');
+      const userId = state.rejectingInstituteId;
+      if (!userId) return;
+      byId('confirm-institute-rejection').disabled = true;
+      try {
+        const updated = await updateInstituteApproval(userId, 'rejected', rejectionReason);
+        if (!updated) return;
+        byId('institute-rejection-dialog').close();
+        state.rejectingInstituteId = null;
+      } finally {
+        byId('confirm-institute-rejection').disabled = false;
+      }
+    });
+    byId('institute-rejection-reason').addEventListener('input', (event) => {
+      event.target.setCustomValidity('');
+    });
+    byId('cancel-institute-rejection').addEventListener('click', () => {
+      byId('institute-rejection-dialog').close();
+      state.rejectingInstituteId = null;
+    });
+    byId('institute-rejection-dialog').addEventListener('close', () => {
+      state.rejectingInstituteId = null;
+    });
+
+    if (state.token) {
+      api('/api/auth/me')
+        .then((result) => showDashboard(result.user))
+        .catch((err) => message(`Please sign in again: ${err.message}`));
+    }
+  </script>
+</body>
+</html>
